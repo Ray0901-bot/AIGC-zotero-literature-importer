@@ -1,0 +1,13 @@
+{
+  "papers": [
+    {
+      "title": "TEST — Literature Agent Example (delete after testing)",
+      "authors": ["Example Researcher"],
+      "year": "2026",
+      "journal": "Test entry — not a real journal",
+      "url": "https://www.zotero.org/",
+      "tags": ["AI-test", "delete-after-testing"],
+      "note": "TEST NOTE — This is not a real paper.\n\nResearch question: Verify that a Zotero parent item can be created with its child note.\n\nMethods: Use Zotero Web API v3.\n\nImportant: Delete this example after testing."
+    }
+  ]
+}

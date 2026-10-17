@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://api.zotero.org; img-src 'self' data:; font-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'">
+  <title>Zotero Literature Importer · 文献与笔记导入</title>
+  <meta name="description" content="纯浏览器运行的 Zotero 文献与阅读笔记导入工具。支持 JSON 上传、DOI 去重、Collection 分类和安全写入。">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">Z<span>↗</span></span><div><strong>Literature Importer</strong><small>FOR ZOTERO · PERSONAL TOOL</small></div></div>
+      <div class="top-actions"><span class="chip"><span class="live-dot"></span>100% 静态网页</span><a class="top-link" href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">获取 API Key <span aria-hidden="true">↗</span></a></div>
+    </header>
+    <main class="main-container">
+      <section class="hero">
+        <div class="hero-copy"><p class="eyebrow">RESEARCH WORKFLOW / 文献管理</p><h1>把研究成果，<br><span>存入你的文献库。</span></h1><p>将 GPT Work 生成的论文信息与精读笔记批量导入 Zotero。浏览器直接调用官方 API，无需服务器或本地 Zotero。</p>
+          <div class="hero-features"><span>✓ DOI 去重</span><span>✓ 父子笔记关联</span><span>✓ Collection 分类</span><span>✓ 密钥不保存</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="art-surface"><div class="paper paper-back"><span></span><span></span><span></span></div><div class="paper paper-front"><div class="paper-icon">↗</div><div class="line big"></div><div class="line med"></div><div class="line sm"></div><div class="art-pill">+ Note saved</div></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div></div></div>
+      </section>
+      <div class="steps" aria-label="操作步骤"><div class="step"><span class="step-num">01</span><strong>连接 Zotero</strong></div><span class="step-arrow">→</span><div class="step"><span class="step-num">02</span><strong>导入 JSON</strong></div><span class="step-arrow">→</span><div class="step"><span class="step-num">03</span><strong>检查并保存</strong></div></div>
+      <div class="workspace">
+        <section class="panel connection-panel" aria-labelledby="connect-title">
+          <div class="section-head"><div class="section-label"><span class="section-icon">01</span><div><h2 id="connect-title">连接你的 Zotero</h2><p>凭证仅保存在当前页面内存，不写入浏览器储存。</p></div></div><span id="connectionBadge" class="status-badge status-idle">未连接</span></div>
+          <div class="credential-grid"><label class="field"><span>Zotero User ID</span><input id="userId" type="text" inputmode="numeric" pattern="[0-9]+" placeholder="例如 1234567" autocomplete="off" spellcheck="false"></label><label class="field"><span>API Key <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">在哪里获取？↗</a></span><div class="password-wrap"><input id="apiKey" type="password" placeholder="粘贴你的专用 API Key" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="toggleKey" type="button" class="small-text-btn" aria-label="显示或隐藏 API Key">显示</button></div></label></div>
+          <div class="connection-bottom"><p class="security-tip"><span aria-hidden="true">♢</span> 请选择具有个人文献库读写权限的专用 Key。不要将 Key 写进 GitHub 仓库。</p><div class="connection-buttons"><button id="disconnectBtn" class="btn btn-quiet" type="button" hidden>断开</button><button id="connectBtn" class="btn btn-primary" type="button">测试连接 <span>→</span></button></div></div>
+        </section>
+        <section class="panel data-panel" aria-labelledby="data-title"><div class="section-head"><div class="section-label"><span class="section-icon">02</span><div><h2 id="data-title">添加文献数据</h2><p>支持粘贴 JSON，或从电脑上传 .json 文件。</p></div></div><button id="sampleBtn" type="button" class="btn btn-quiet btn-small">载入示例</button></div>
+          <div class="input-tabs" role="tablist" aria-label="数据输入方式"><button id="pasteTab" role="tab" type="button" aria-selected="true" aria-controls="pastePane" class="tab active">粘贴 JSON</button><button id="uploadTab" role="tab" type="button" aria-selected="false" aria-controls="uploadPane" class="tab">上传文件</button></div>
+          <div id="pastePane" role="tabpanel" aria-labelledby="pasteTab"><textarea id="jsonInput" spellcheck="false" placeholder='{
+  "papers": [
+    {
+      "title": "论文标题",
+      "doi": "10.xxxx/xxxx",
+      "authors": ["Jane Smith"],
+      "year": 2025,
+      "journal": "期刊名称",
+      "note": "研究目的、方法、主要结论、局限性……"
+    }
+  ]
+}'></textarea></div>
+          <div id="uploadPane" role="tabpanel" aria-labelledby="uploadTab" hidden><label class="upload-zone" id="dropZone"><span class="upload-symbol" aria-hidden="true">↥</span><strong>选择或拖入 JSON 文件</strong><small>仅在本机浏览器内读取文件，不会上传到第三方文件服务器</small><input id="fileInput" type="file" accept=".json,application/json"></label><p id="fileName" class="selected-file"></p></div>
+          <div class="data-bottom"><p class="foot-hint">数据结构：<code>{ "papers": [ … ] }</code>，也支持直接使用 JSON 数组。</p><div class="data-buttons"><button id="clearBtn" type="button" class="btn btn-quiet">清空</button><button id="parseBtn" type="button" class="btn btn-secondary">解析并预览 <span>→</span></button></div></div><div id="parseError" class="notice notice-error" role="alert" hidden></div>
+        </section>
+        <section class="panel review-panel" id="reviewSection" aria-labelledby="review-title"><div class="section-head"><div class="section-label"><span class="section-icon">03</span><div><h2 id="review-title">预览与导入设置</h2><p>先核对论文信息，确认后才会写入 Zotero。</p></div></div><span id="totalBadge" class="count-badge">0 篇</span></div>
+          <div id="emptyState" class="empty-state"><div class="empty-icon">▤</div><strong>尚未添加文献</strong><p>在上方粘贴 GPT 输出的 JSON 或载入示例，点击「解析并预览」。</p></div>
+          <div id="reviewContent" hidden>
+            <div class="options-grid"><label class="field"><span>保存到 Collection</span><select id="collectionSelect"><option value="">不指定（我的文献库根目录）</option></select></label><label class="field"><span>额外标签（英文逗号分隔）</span><input id="extraTags" type="text" placeholder="例如 AI-reviewed-pending, literature-review"></label></div>
+            <div class="toggle-settings"><label class="check-line"><input id="attachExisting" type="checkbox"><span><strong>已有相同 DOI / 标题时，仅追加笔记</strong><small>默认跳过重复论文；开启后可能产生重复笔记，不修改原条目。</small></span></label></div>
+            <div class="list-heading"><strong>待导入论文</strong><span id="noteCount">0 条笔记</span></div><div id="paperList" class="paper-list"></div>
+            <div id="scanStatus" class="notice notice-neutral" role="status" hidden></div>
+            <div class="action-footer"><div class="action-summary"><strong id="importSummary">共 0 篇论文</strong><span id="importSub">不上传 PDF，只有条目和文字笔记。</span></div><button id="importBtn" type="button" class="btn btn-primary btn-large" disabled>检查重复并导入 <span>↗</span></button></div>
+          </div>
+        </section>
+        <section class="panel log-panel" id="resultsSection" hidden aria-labelledby="result-title"><div class="section-head"><div class="section-label"><span class="section-icon">✓</span><div><h2 id="result-title">导入结果</h2><p>每一篇论文单独汇报，失败项目不会被当成成功。</p></div></div><button id="downloadLogBtn" class="btn btn-quiet btn-small" type="button">导出结果 JSON ↓</button></div><div id="resultSummary" class="result-summary"></div><ol id="resultsList" class="results-list"></ol></section>
+      </div>
+      <section class="help-section"><div><span class="eyebrow">NEED A TEMPLATE?</span><h2>让 GPT 输出正确的数据格式</h2><p>复制下面的指令给 GPT Work，让它按网页可识别的 JSON 格式返回已核实的论文数据。</p></div><div class="prompt-panel"><p id="promptText">请将最终筛选的科研论文输出为严格有效的 JSON，顶层格式为 {"papers":[...]}。每篇使用 title、doi、authors（字符串数组）、year、journal、volume、issue、pages、url、abstract、note（纯文本或分段文本）、tags（字符串数组）字段。仅输出确已核实的书目信息；不要虚构 DOI、作者、期刊或实验结论。note 应记录研究问题、实验设计、关键结果、局限性及证据位置，无法阅读全文时明确标注。不要输出 Markdown 代码围栏，也不要生成示例或测试论文。</p><button id="copyPromptBtn" class="btn btn-outline" type="button">复制指令 <span>⧉</span></button></div></section>
+      <footer class="footer"><div><strong>Literature Importer</strong><span>独立个人工具 · 非 Zotero 官方产品</span></div><div><a href="https://www.zotero.org/support/dev/web_api/v3/start" target="_blank" rel="noopener noreferrer">Zotero API 文档 ↗</a><span>© 2026 · Client-side only</span></div></footer>
+    </main>
+  </div>
+  <dialog id="confirmDialog" class="confirmation"><form method="dialog"><h3>确认开始写入？</h3><p id="confirmText">将向 Zotero 发送文献和笔记。</p><p class="confirm-warning">该操作会修改 Zotero 云端文献库。建议先使用示例检查流程；测试条目不会自动删除。</p><div class="dialog-actions"><button class="btn btn-quiet" value="cancel">取消</button><button class="btn btn-primary" id="confirmProceed" value="confirm">确认导入</button></div></form></dialog>
+</body>
+</html>
